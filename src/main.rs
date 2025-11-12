@@ -3,6 +3,8 @@ use std::error::Error;
 use std::fs;
 use std::process;
 
+use simple_grep::search;
+
 struct Config {
     // we could have a reference of string and manage the lifetime.
     query: String,
@@ -26,6 +28,10 @@ impl Config {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.fp)?;
     println!("In file contents {contents}");
+
+    for line in search(&config.query, &contents) {
+        println!("{line}");
+    }
 
     Ok(())
 }
