@@ -1,14 +1,37 @@
 use std::env;
 use std::fs;
+use std::process;
+
+struct Config {
+    // we could have a reference of string and manage the lifetime.
+    query: String,
+    fp: String,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Result<Self, &'static str> {
+        if args.len() < 3 {
+            // Interesting, this is a lower case, the start of the error is defined in the main()
+            return Err("not enough arguments");
+        }
+
+        Ok(Config {
+            query: args[1].to_string(),
+            fp: args[2].to_string(),
+        })
+    }
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let query = &args[1];
-    let fp = &args[2];
+    let config = Config::new(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {err}");
+        process::exit(1);
+    });
 
-    println!("Searching for {query}");
-    println!("In file {fp}");
+    println!("Searching for {}", config.query);
+    println!("In file {}", config.fp);
 
-    let contents = fs::read_to_string(fp).expect("Should be able to read the file");
+    let contents = fs::read_to_string(config.fp).expect("Should be able to read the file");
     println!("In file contents {contents}");
 }
