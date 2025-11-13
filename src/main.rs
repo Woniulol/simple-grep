@@ -3,12 +3,13 @@ use std::error::Error;
 use std::fs;
 use std::process;
 
-use simple_grep::search;
+use simple_grep::{search, search_case_insensitive};
 
 struct Config {
     // we could have a reference of string and manage the lifetime.
     query: String,
     fp: String,
+    ignore_case: bool,
 }
 
 impl Config {
@@ -18,9 +19,12 @@ impl Config {
             return Err("not enough arguments");
         }
 
+        let ignore_case: bool = env::var("IGNORE_CASE").is_ok();
+
         Ok(Config {
             query: args[1].to_string(),
             fp: args[2].to_string(),
+            ignore_case: ignore_case,
         })
     }
 }
@@ -28,8 +32,14 @@ impl Config {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.fp)?;
 
-    for line in search(&config.query, &contents) {
-        println!("{line}");
+    let res = if config.ignore_case {
+        search_case_insensitive(&config.query, &contents)
+    } else {
+        search(&config.query, &contents)
+    };
+
+    for line in res {
+        println!("{}", line);
     }
 
     Ok(())
